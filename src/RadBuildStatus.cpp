@@ -512,6 +512,8 @@ void RootWindow::OnCommand(int id, HWND hwndCtl, UINT codeNotify)
 LRESULT RootWindow::HandleMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
     static const UINT s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+    if (uMsg == s_uTaskbarRestart)
+        AddTrayIcon(NIM_ADD);
 
     LRESULT ret = 0;
     switch (uMsg)
