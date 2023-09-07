@@ -75,6 +75,15 @@ BEGIN
     END
 END
 
+IDR_MENU2 MENU
+BEGIN
+    POPUP "&Item"
+    BEGIN
+        MENUITEM "&Goto...",                    ID_ITEM_GOTO
+        MENUITEM "&Ignore",                     ID_ITEM_IGNORE
+    END
+END
+
 #endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////
 

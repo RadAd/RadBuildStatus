@@ -6,6 +6,8 @@
 #include <crtdbg.h>
 #include <string>
 #include <memory>
+#include <map>
+#include <set>
 #include <nlohmann/json.hpp>
 
 #include "ListViewPlus.h"
@@ -286,6 +288,7 @@ private:
     void OnTimer(UINT id);
     void OnContextMenu(HWND hWndContext, UINT xPos, UINT yPos);
     void OnCommand(int id, HWND hWndCtl, UINT codeNotify);
+    void OnInitMenuPopup(HMENU hMenu, UINT item, BOOL fSystemMenu);
 
     void Refresh();
 
@@ -295,6 +298,59 @@ private:
     std::map<DWORD, int> m_IconMap;
     std::vector<Service> m_services;
     TrayIconHandler m_trayIcon = TEXT("Rad Build Status");
+
+    struct JobId
+    {
+        std::tstring name;
+        int iGroupId;
+
+        bool operator<(const JobId& other) const
+        {
+            if (name != other.name)
+                return name < other.name;
+            return iGroupId < other.iGroupId;
+        }
+    };
+
+    static JobId GetId(const Job& j)
+    {
+            return { j.name, j.iGroupId };
+    }
+    JobId GetId(int i) const
+    {
+        TCHAR name[200] = TEXT("");
+        LVITEM item;
+        ZeroMemory(&item, sizeof(LVITEM));
+        item.mask = LVIF_TEXT | LVIF_GROUPID;
+        item.iItem = i;
+        item.pszText = name;
+        item.cchTextMax = ARRAYSIZE(name);
+        ListView_GetItem(m_hWndChild, &item);
+        return { name, item.iGroupId };
+    }
+
+    std::set<JobId> m_ignored;
+    bool IsIgnored(const JobId& id) const
+    {
+        return m_ignored.find(id) != m_ignored.end();
+    }
+    bool IsIgnored(int i) const
+    {
+        return IsIgnored(GetId(i));
+    }
+
+    void SetIgnore(int i, bool ignore)
+    {
+        const JobId id = GetId(i);
+        if (ignore)
+            m_ignored.insert(id);
+        else
+        {
+            auto it = m_ignored.find(id);
+            if (it != m_ignored.end())
+                m_ignored.erase(it);
+        }
+    }
 };
 
 void RootWindow::GetCreateWindow(CREATESTRUCT& cs)
@@ -302,7 +358,7 @@ void RootWindow::GetCreateWindow(CREATESTRUCT& cs)
     Window::GetCreateWindow(cs);
     cs.lpszName = TEXT("Rad Build Status");
     cs.style = WS_OVERLAPPEDWINDOW;
-    cs.dwExStyle = WS_EX_TOOLWINDOW;
+    cs.dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
 }
 
 BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
@@ -490,7 +546,8 @@ void RootWindow::OnTimer(UINT id)
 
 void RootWindow::OnContextMenu(HWND hWndContext, UINT xPos, UINT yPos)
 {
-    const auto hMenu = MakeHandleDeleter(LoadPopupMenu(g_hInstance, IDR_MENU1), DestroyMenu);
+    const DWORD menuId = hWndContext == NULL ? IDR_MENU1 : IDR_MENU2;
+    const auto hMenu = MakeHandleDeleter(LoadPopupMenu(g_hInstance, menuId), DestroyMenu);
     TrackPopupMenu(hMenu.get(), TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON, xPos, yPos, 0, *this, nullptr);
 }
 
@@ -504,6 +561,44 @@ void RootWindow::OnCommand(int id, HWND hwndCtl, UINT codeNotify)
         case ID_FILE_EXIT:
             DestroyWindow(*this);
             break;
+        case ID_ITEM_GOTO:
+        {
+            int i = -1;
+            while ((i = ListView_GetNextItem(m_hWndChild, i, LVNI_SELECTED)) != -1)
+            {
+                LPCTSTR strUrl = (LPCTSTR)ListView_GetItemParam(m_hWndChild, i);
+                if (strUrl != nullptr)
+                    ShellExecute(NULL, TEXT("open"), strUrl, NULL, NULL, SW_SHOWNORMAL);
+            }
+            break;
+        }
+        case ID_ITEM_IGNORE:
+        {
+            bool ignored = false;
+            int i = -1;
+            while ((i = ListView_GetNextItem(m_hWndChild, i, LVNI_SELECTED)) != -1)
+                ignored |= IsIgnored(i);
+            i = -1;
+            while ((i = ListView_GetNextItem(m_hWndChild, i, LVNI_SELECTED)) != -1)
+                SetIgnore(i, !ignored);
+            Refresh();
+            break;
+        }
+    }
+}
+
+void RootWindow::OnInitMenuPopup(HMENU hMenu, UINT item, BOOL fSystemMenu)
+{
+    if (!fSystemMenu && item == 0)
+    {
+        if (GetMenuItemID(hMenu, 0) == ID_ITEM_GOTO)
+        {
+            bool ignored = false;
+            int i = -1;
+            while ((i = ListView_GetNextItem(m_hWndChild, i, LVNI_SELECTED)) != -1)
+                ignored |= IsIgnored(i);
+            CheckMenuItem(hMenu, ID_ITEM_IGNORE, MF_BYCOMMAND | (ignored ? MF_CHECKED : MF_UNCHECKED));
+        }
     }
 }
 
@@ -521,6 +616,7 @@ LRESULT RootWindow::HandleMessage(const UINT uMsg, const WPARAM wParam, const LP
         HANDLE_MSG(WM_TIMER, OnTimer);
         HANDLE_MSG(WM_CONTEXTMENU, OnContextMenu);
         HANDLE_MSG(WM_COMMAND, OnCommand);
+        HANDLE_MSG(WM_INITMENUPOPUP, OnInitMenuPopup);
     }
 
     m_trayIcon.HandleMessage(*this, uMsg, wParam, lParam);
@@ -567,7 +663,7 @@ void RootWindow::Refresh()
         // TODO
         // GetDurationFormatEx
 
-        if (j.iIcon > iMaxIcon)
+        if (!IsIgnored(GetId(j)) && j.iIcon > iMaxIcon)
             iMaxIcon = j.iIcon;
     }
 
