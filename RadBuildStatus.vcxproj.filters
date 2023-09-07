@@ -6,6 +6,7 @@
     <ClCompile Include="src\WinMain.cpp" />
     <ClCompile Include="src\ListViewPlus.c" />
     <ClCompile Include="src\WindowsPlus.c" />
+    <ClCompile Include="src\TrayIconHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Window.h" />
@@ -14,6 +15,7 @@
     <ClInclude Include="src\ListViewPlus.h" />
     <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\WindowsPlus.h" />
+    <ClInclude Include="src\TrayIconHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">

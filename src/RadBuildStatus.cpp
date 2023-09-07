@@ -9,6 +9,7 @@
 #include <nlohmann/json.hpp>
 
 #include "ListViewPlus.h"
+#include "TrayIconHandler.h"
 #include "Utils.h"
 
 #include "..\resource.h"
@@ -23,7 +24,6 @@ extern HINSTANCE g_hInstance;
 
 #define TIMER_REFRESH 1
 
-#define WM_TRAY (WM_USER+101)
 #define ID_LIST (101)
 
 using json = nlohmann::json;
@@ -287,7 +287,6 @@ private:
     void OnContextMenu(HWND hWndContext, UINT xPos, UINT yPos);
     void OnCommand(int id, HWND hWndCtl, UINT codeNotify);
 
-    void AddTrayIcon(DWORD dwMessage);
     void Refresh();
 
     static LPCTSTR ClassName() { return TEXT("RadBuildStatus"); }
@@ -295,6 +294,7 @@ private:
     HWND m_hWndChild = NULL;
     std::map<DWORD, int> m_IconMap;
     std::vector<Service> m_services;
+    TrayIconHandler m_trayIcon = TEXT("Rad Build Status");
 };
 
 void RootWindow::GetCreateWindow(CREATESTRUCT& cs)
@@ -390,7 +390,6 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     }
 
     SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON1), ICON_BIG));
-    AddTrayIcon(NIM_ADD);
     Refresh();
 
 #if 0
@@ -408,7 +407,6 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
 void RootWindow::OnDestroy()
 {
     PostQuitMessage(0);
-    AddTrayIcon(NIM_DELETE);
 
     auto hKey = MakeHandleDeleter<HKEY>(NULL, RegCloseKey);
     RegCreateKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\RadSoft\\RadBuildStatus"), out_ptr(hKey));
@@ -511,10 +509,6 @@ void RootWindow::OnCommand(int id, HWND hwndCtl, UINT codeNotify)
 
 LRESULT RootWindow::HandleMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
-    static const UINT s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
-    if (uMsg == s_uTaskbarRestart)
-        AddTrayIcon(NIM_ADD);
-
     LRESULT ret = 0;
     switch (uMsg)
     {
@@ -527,45 +521,13 @@ LRESULT RootWindow::HandleMessage(const UINT uMsg, const WPARAM wParam, const LP
         HANDLE_MSG(WM_TIMER, OnTimer);
         HANDLE_MSG(WM_CONTEXTMENU, OnContextMenu);
         HANDLE_MSG(WM_COMMAND, OnCommand);
-
-        case WM_TRAY:
-            switch (lParam)
-            {
-                case WM_LBUTTONDBLCLK:
-                {
-                    SetForegroundWindow(*this);
-                    ShowWindow(*this, SW_NORMAL);
-                    break;
-                }
-                case WM_RBUTTONDOWN:
-                {
-                    SetForegroundWindow(*this);
-                    POINT pt;
-                    GetCursorPos(&pt);
-                    SendMessage(*this, WM_CONTEXTMENU, 0, MAKELONG(pt.x, pt.y));
-                    break;
-                }
-            }
-            break;
     }
 
+    m_trayIcon.HandleMessage(*this, uMsg, wParam, lParam);
     if (!IsHandled())
         ret = Window::HandleMessage(uMsg, wParam, lParam);
 
     return ret;
-}
-
-void RootWindow::AddTrayIcon(DWORD dwMessage)
-{
-    NOTIFYICONDATA nid = {};
-    nid.cbSize = sizeof(nid);
-    nid.uVersion = NOTIFYICON_VERSION_4;
-    nid.hWnd = *this;
-    nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
-    nid.uCallbackMessage = WM_TRAY;
-    wcscpy_s(nid.szTip, TEXT("Rad Build Status"));
-    nid.hIcon = (HICON) SendMessage(*this, WM_GETICON, ICON_BIG, 0);
-    Shell_NotifyIcon(dwMessage, &nid);
 }
 
 void RootWindow::Refresh()
@@ -610,7 +572,7 @@ void RootWindow::Refresh()
     }
 
     SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(g_hInstance, MAKEINTRESOURCE(iMaxIcon), ICON_BIG));
-    AddTrayIcon(NIM_MODIFY);
+    m_trayIcon.Update();
 }
 
 bool Run(_In_ const LPCTSTR lpCmdLine, _In_ const int nShowCmd)

@@ -87,6 +87,7 @@
   <ItemGroup>
     <ClCompile Include="src\RadBuildStatus.cpp" />
     <ClCompile Include="src\ListViewPlus.c" />
+    <ClCompile Include="src\TrayIconHandler.cpp" />
     <ClCompile Include="src\WindowsPlus.c" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\WinMain.cpp" />
@@ -94,6 +95,7 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\ListViewPlus.h" />
+    <ClInclude Include="src\TrayIconHandler.h" />
     <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\WindowsPlus.h" />
     <ClInclude Include="src\Window.h" />
