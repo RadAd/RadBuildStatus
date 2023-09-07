@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #ifdef UNICODE
 #define tstring wstring

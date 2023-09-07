@@ -2,6 +2,7 @@
 #include <Windows.h>
 
 #include <strsafe.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -20,6 +21,23 @@ extern "C"
 #endif
 
 HWND FindOwnedWindow(HWND hOwner, LPCTSTR lpClassName, LPCTSTR lpWindowName);
+
+// sz : ICON_BIG or ICON_SMALL
+inline HICON LoadIconImage(HINSTANCE hInstance, LPCTSTR resource, DWORD sz)
+{
+    const int CX_ICON = sz == ICON_SMALL ? GetSystemMetrics(SM_CXSMICON) : GetSystemMetrics(SM_CXICON);
+    const int CY_ICON = sz == ICON_SMALL ? GetSystemMetrics(SM_CYSMICON) : GetSystemMetrics(SM_CYICON);
+    return (HICON)LoadImage(hInstance, resource, IMAGE_ICON, CX_ICON, CY_ICON, LR_SHARED);
+}
+
+inline HMENU LoadPopupMenu(HINSTANCE hInstance, DWORD id)
+{
+    const HMENU hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(id));
+    const HMENU hPopupMenu = GetSubMenu(hMenu, 0);
+    RemoveMenu(hMenu, 0, MF_BYPOSITION);
+    DestroyMenu(hMenu);
+    return hPopupMenu;
+}
 
 inline void Replace(TCHAR* str, TCHAR f, TCHAR r)
 {

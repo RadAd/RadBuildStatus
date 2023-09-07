@@ -13,6 +13,10 @@
 #define HANDLEX_WM_WININICHANGE(wParam, lParam, fn) \
     ((fn)((LPCTSTR)(lParam)), 0L)
 
+/* LRESULT Cls::OnNotify(DWORD dwID, LPNMHDR pNmHdr) */
+#define HANDLEX_WM_NOTIFY(wParam, lParam, fn) \
+    MAKELRESULT((LRESULT)(fn)((DWORD) wParam, (LPNMHDR) lParam), 0L)
+
 /* void Cls::OnSysColorChange() */
 #define HANDLEX_WM_SYSCOLORCHANGE(wParam, lParam, fn) \
     ((fn)(), 0L)

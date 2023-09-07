@@ -2,17 +2,17 @@
 #include "Windowxx.h"
 //#include <tchar.h>
 #include <shellapi.h>
-#include <wininet.h>
 #include <crtdbg.h>
 #include <string>
 #include <memory>
 #include <map>
 #include <set>
-#include <nlohmann/json.hpp>
 
 #include "ListViewPlus.h"
+#include "WindowsPlus.h"
 #include "TrayIconHandler.h"
 #include "Utils.h"
+#include "Job.h"
 
 #include "..\resource.h"
 
@@ -27,245 +27,6 @@ extern HINSTANCE g_hInstance;
 #define TIMER_REFRESH 1
 
 #define ID_LIST (101)
-
-using json = nlohmann::json;
-
-/* LRESULT Cls::OnNotify(DWORD dwID, LPNMHDR pNmHdr) */
-#define HANDLEX_WM_NOTIFY(wParam, lParam, fn) \
-    MAKELRESULT((LRESULT)(fn)((DWORD) wParam, (LPNMHDR) lParam), 0L)
-
-// sz : ICON_BIG or ICON_SMALL
-HICON LoadIcon(HINSTANCE hInstance, LPCTSTR resource, DWORD sz)
-{
-    const int CX_ICON = sz == ICON_SMALL ? GetSystemMetrics(SM_CXSMICON) : GetSystemMetrics(SM_CXICON);
-    const int CY_ICON = sz == ICON_SMALL ? GetSystemMetrics(SM_CYSMICON) : GetSystemMetrics(SM_CYICON);
-    return (HICON) LoadImage(hInstance, resource, IMAGE_ICON, CX_ICON, CY_ICON, LR_SHARED);
-}
-
-HMENU LoadPopupMenu(HINSTANCE hInstance, DWORD id)
-{
-    const HMENU hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(id));
-    const HMENU hPopupMenu = GetSubMenu(hMenu, 0);
-    RemoveMenu(hMenu, 0, MF_BYPOSITION);
-    DestroyMenu(hMenu);
-    return hPopupMenu;
-}
-
-std::string get_or(const json& a, const std::string& def)
-{
-    return a.is_null() ? def : a.get<std::string>();
-}
-
-std::string LoadUrl(LPCTSTR strUrl, const std::map<std::tstring, std::tstring>& headers = {})
-{
-    std::tstring strHeader;
-    for (const auto& h : headers)
-        strHeader += h.first + TEXT(": ") + h.second + TEXT("\n");
-
-    const auto hInternetSession = MakeHandleDeleter(InternetOpen(TEXT("RadBuildStatus"), INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, ID_LIST), InternetCloseHandle);
-    const auto hURL = MakeHandleDeleter(InternetOpenUrl(hInternetSession.get(), strUrl, strHeader.c_str(), DWORD(strHeader.size()), INTERNET_FLAG_RELOAD, 0), InternetCloseHandle);
-
-    std::string ret;
-    if (hURL)
-    {
-        DWORD dwBytesRead = 1;
-        for (; dwBytesRead > 0;)
-        {
-            char buf[1024];
-            InternetReadFile(hURL.get(), buf, (DWORD) sizeof(buf), &dwBytesRead);
-            ret.append(buf, dwBytesRead);
-        }
-    }
-    else
-    {
-        DWORD dwError = GetLastError();
-#if 0
-        DWORD error = 0;
-        TCHAR buf[1024];
-        DWORD len = ARRAYSIZE(buf);
-        if (!InternetGetLastResponseInfo(&error, buf, &len))
-            dwError = GetLastError();
-        _RPTFWN(_CRT_WARN, TEXT("%d:%s"), error, buf);
-#endif
-    }
-
-    return ret;
-}
-
-SYSTEMTIME ConvertFromISO8601(const std::string& strTimestamp)
-{
-    SYSTEMTIME timestamp_utc = {};
-    timestamp_utc.wYear = (WORD) strtol(strTimestamp.substr(0, 4).c_str(), nullptr, 10);
-    timestamp_utc.wMonth = (WORD) strtol(strTimestamp.substr(5, 2).c_str(), nullptr, 10);
-    timestamp_utc.wDay = (WORD) strtol(strTimestamp.substr(8, 2).c_str(), nullptr, 10);
-    timestamp_utc.wHour = (WORD) strtol(strTimestamp.substr(11, 2).c_str(), nullptr, 10);
-    timestamp_utc.wMinute = (WORD) strtol(strTimestamp.substr(14, 2).c_str(), nullptr, 10);
-    timestamp_utc.wSecond = (WORD) strtol(strTimestamp.substr(17, 2).c_str(), nullptr, 10);
-    return timestamp_utc;
-}
-
-SYSTEMTIME ConvertFromUnixTime(int64_t time)
-{
-    ULARGE_INTEGER    li;
-    li.QuadPart = time;
-    li.QuadPart *= 10000;
-    li.QuadPart += 116444736000000000;
-    FILETIME ft = { li.LowPart, li.HighPart };
-    SYSTEMTIME timestamp_utc = {};
-    FileTimeToSystemTime(&ft, &timestamp_utc);
-    return timestamp_utc;
-}
-
-enum class ServiceType
-{
-    NONE,
-    JENKINS,
-    APPVEYOR,
-};
-
-struct Job
-{
-    std::tstring name;
-    DWORD iIcon;
-    int iGroupId;
-    std::tstring url;
-    std::tstring status;
-    SYSTEMTIME timestamp;
-};
-
-struct Service
-{
-    std::tstring name;
-    ServiceType type;
-    std::tstring url;
-    std::tstring authorization;
-
-    int iGroupId;
-};
-
-std::vector<Job> GetJobs(const Service& s)
-{
-    std::vector<Job> jobs;
-    switch (s.type)
-    {
-        case ServiceType::JENKINS:
-        {
-            const std::string str = LoadUrl((s.url + TEXT("?tree=jobs[name,buildable,url,lastBuild[number,duration,timestamp,result,changeSet[items[msg,author[fullName]]]]]")).c_str());
-            const json data = json::parse(str);
-
-            for (const auto& job : data["jobs"])
-            {
-                Job j = {};
-                j.iGroupId = s.iGroupId;
-                try
-                {
-                    j.name = convert(job["name"].get<std::string>());
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                try
-                {
-                    j.url = convert(job["url"].get<std::string>());
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                try
-                {
-                    j.status = convert(get_or(job["lastBuild"]["result"], "PROCESS"));
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                try
-                {
-                    const SYSTEMTIME timestamp_utc = ConvertFromUnixTime(job["lastBuild"]["timestamp"]);
-                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                j.iIcon = IDI_ICON_INFO;
-                if (j.status == TEXT("SUCCESS"))
-                    j.iIcon = IDI_ICON_OK;
-                else if (j.status == TEXT("FAILURE"))
-                    j.iIcon = IDI_ICON_ERROR;
-                else if (j.status == TEXT("PROCESS"))
-                    j.iIcon = IDI_ICON_RUN;
-                jobs.push_back(j);
-            }
-            break;
-        }
-
-        case ServiceType::APPVEYOR:
-        {
-            std::map<std::tstring, std::tstring> headers;
-            if (!s.authorization.empty())
-                headers[TEXT("Authorization")] = TEXT("Bearer ") + s.authorization;
-            headers[TEXT("Content-Type")] = TEXT("application/json");
-            const std::string str = LoadUrl(s.url.c_str(), headers);
-            const json data = json::parse(str);
-
-            for (const auto& job : data)
-            {
-                Job j = {};
-                j.iGroupId = s.iGroupId;
-                try
-                {
-                    j.name = convert(job["name"].get<std::string>());
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                try
-                {
-                    const std::tstring accountName = convert(job["accountName"].get<std::string>());
-                    const std::tstring slug = convert(job["slug"].get<std::string>());
-                    j.url = TEXT("https://ci.appveyor.com/project/") + accountName + TEXT("/") + slug;
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                try
-                {
-                    j.status = convert(job["builds"][0]["status"].get<std::string>());
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                try
-                {
-                    const SYSTEMTIME timestamp_utc = ConvertFromISO8601(job["builds"][0]["committed"]);
-                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
-                }
-                catch (const json::type_error& e)
-                {
-                    _RPTF0(_CRT_WARN, e.what());
-                }
-                j.iIcon = IDI_ICON_INFO;
-                if (j.status == TEXT("success"))
-                    j.iIcon = IDI_ICON_OK;
-                else if (j.status == TEXT("failure"))
-                    j.iIcon = IDI_ICON_ERROR;
-                jobs.push_back(j);
-            }
-            break;
-        }
-
-        default:
-            _ASSERT(false);
-            break;
-    }
-    return jobs;
-}
 
 class RootWindow : public Window
 {
@@ -316,6 +77,7 @@ private:
     {
             return { j.name, j.iGroupId };
     }
+
     JobId GetId(int i) const
     {
         TCHAR name[200] = TEXT("");
@@ -334,6 +96,7 @@ private:
     {
         return m_ignored.find(id) != m_ignored.end();
     }
+
     bool IsIgnored(int i) const
     {
         return IsIgnored(GetId(i));
@@ -345,11 +108,7 @@ private:
         if (ignore)
             m_ignored.insert(id);
         else
-        {
-            auto it = m_ignored.find(id);
-            if (it != m_ignored.end())
-                m_ignored.erase(it);
-        }
+            m_ignored.erase(id);
     }
 };
 
@@ -409,7 +168,7 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     std::vector<HICON> hIcons;
     for (const DWORD id : { IDI_ICON_INFO, IDI_ICON_ERROR, IDI_ICON_OK, IDI_ICON_RUN })
     {
-        const HICON hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(id), ICON_SMALL);
+        const HICON hIcon = LoadIconImage(hInstance, MAKEINTRESOURCE(id), ICON_SMALL);
         if (hIcon)
         {
             m_IconMap[id] = static_cast<int>(hIcons.size());
@@ -445,7 +204,7 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
         }
     }
 
-    SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON1), ICON_BIG));
+    SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(IDI_ICON1), ICON_BIG));
     Refresh();
 
 #if 0
@@ -667,7 +426,7 @@ void RootWindow::Refresh()
             iMaxIcon = j.iIcon;
     }
 
-    SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(g_hInstance, MAKEINTRESOURCE(iMaxIcon), ICON_BIG));
+    SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(iMaxIcon), ICON_BIG));
     m_trayIcon.Update();
 }
 
