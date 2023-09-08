@@ -343,6 +343,9 @@ void RootWindow::OnCommand(int id, HWND hwndCtl, UINT codeNotify)
             Refresh();
             break;
         }
+        case ID_ITEM_REFRESH:
+            Refresh();
+            break;
     }
 }
 
@@ -350,13 +353,22 @@ void RootWindow::OnInitMenuPopup(HMENU hMenu, UINT item, BOOL fSystemMenu)
 {
     if (!fSystemMenu && item == 0)
     {
-        if (GetMenuItemID(hMenu, 0) == ID_ITEM_GOTO)
+        switch (GetMenuItemID(hMenu, 0))
+        {
+        case ID_ITEM_GOTO:
         {
             bool ignored = false;
             int i = -1;
             while ((i = ListView_GetNextItem(m_hWndChild, i, LVNI_SELECTED)) != -1)
                 ignored |= IsIgnored(i);
             CheckMenuItem(hMenu, ID_ITEM_IGNORE, MF_BYCOMMAND | (ignored ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+        case ID_FILE_OPEN:
+        {
+            SetMenuDefaultItem(hMenu, ID_FILE_OPEN, MF_BYCOMMAND);
+            break;
+        }
         }
     }
 }

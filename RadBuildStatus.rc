@@ -81,6 +81,7 @@ BEGIN
     BEGIN
         MENUITEM "&Goto...",                    ID_ITEM_GOTO
         MENUITEM "&Ignore",                     ID_ITEM_IGNORE
+        MENUITEM "&Refresh",                    ID_ITEM_REFRESH
     END
 END
 
