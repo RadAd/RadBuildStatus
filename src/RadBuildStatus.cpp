@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 
+#include "Rad/Log.h"
 #include "Rad/ListViewPlus.h"
 #include "Rad/WindowsPlus.h"
 #include "Rad/TrayIconHandler.h"
@@ -448,18 +449,14 @@ void RootWindow::Refresh()
 
 bool Run(_In_ const LPCTSTR lpCmdLine, _In_ const int nShowCmd)
 {
-    if (RootWindow::Register() == 0)
-    {
-        MessageBox(NULL, TEXT("Error registering window class"), TEXT("Rad Build Status"), MB_ICONERROR | MB_OK);
-        return false;
-    }
-    RootWindow* prw = RootWindow::Create();
-    if (prw == nullptr)
-    {
-        MessageBox(NULL, TEXT("Error creating root window"), TEXT("Rad Build Status"), MB_ICONERROR | MB_OK);
-        return false;
-    }
+    RadLogInitWnd(NULL, "Rad Build Status", TEXT("Rad Build Status"));
 
+    CHECK_LE_RET(RootWindow::Register(), false);
+
+    RootWindow* prw = RootWindow::Create();
+    CHECK_LE_RET(prw != nullptr, false);
+
+    RadLogInitWnd(*prw, "Rad Build Status", TEXT("Rad Build Status"));
     //ShowWindow(*prw, nShowCmd);
     return true;
 }

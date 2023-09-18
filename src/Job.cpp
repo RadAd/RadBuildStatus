@@ -2,6 +2,7 @@
 #include <wininet.h>
 #include <nlohmann/json.hpp>
 #include "..\resource.h"
+#include "Rad/Log.h"
 
 using json = nlohmann::json;
 
@@ -42,7 +43,7 @@ namespace
             DWORD len = ARRAYSIZE(buf);
             if (!InternetGetLastResponseInfo(&error, buf, &len))
                 dwError = GetLastError();
-            _RPTFWN(_CRT_WARN, TEXT("%d:%s"), error, buf);
+            RadLog(LogLevel::LOG_WARN, format(TEXT("%d:%s"), error, buf), SRC_LOC);
 #endif
         }
 
@@ -94,7 +95,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             try
             {
@@ -102,7 +103,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             try
             {
@@ -110,7 +111,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             try
             {
@@ -119,7 +120,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             j.iIcon = IDI_ICON_INFO;
             if (j.status == TEXT("SUCCESS"))
@@ -152,7 +153,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             try
             {
@@ -162,7 +163,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             try
             {
@@ -170,7 +171,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             try
             {
@@ -179,7 +180,7 @@ std::vector<Job> GetJobs(const Service& s)
             }
             catch (const json::type_error& e)
             {
-                _RPTF0(_CRT_WARN, e.what());
+                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
             }
             j.iIcon = IDI_ICON_INFO;
             if (j.status == TEXT("success"))
