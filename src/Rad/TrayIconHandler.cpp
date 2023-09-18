@@ -17,6 +17,7 @@ void TrayIconHandler::Update()
 void TrayIconHandler::HandleMessage(const HWND hWnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
     m_hWnd = hWnd;
+    m_bHandled = false;
 
     static const UINT s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
     if (uMsg == s_uTaskbarRestart)

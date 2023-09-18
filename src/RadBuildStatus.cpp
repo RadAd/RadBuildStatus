@@ -1,5 +1,5 @@
-#include "Window.h"
-#include "Windowxx.h"
+#include "Rad/Window.h"
+#include "Rad/Windowxx.h"
 //#include <tchar.h>
 #include <shellapi.h>
 #include <crtdbg.h>
@@ -8,9 +8,9 @@
 #include <map>
 #include <set>
 
-#include "ListViewPlus.h"
-#include "WindowsPlus.h"
-#include "TrayIconHandler.h"
+#include "Rad/ListViewPlus.h"
+#include "Rad/WindowsPlus.h"
+#include "Rad/TrayIconHandler.h"
 #include "Utils.h"
 #include "Job.h"
 

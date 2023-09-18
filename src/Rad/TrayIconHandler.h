@@ -15,8 +15,11 @@ public:
 
 private:
     HWND m_hWnd;
+    bool m_bHandled;
     BOOL OnCreate(LPCREATESTRUCT lpCreateStruct);
     void OnDestroy();
+
+    void SetHandled(bool bHandled) { m_bHandled = bHandled; }
 
 private:
     void AddTrayIcon(DWORD dwMessage);

@@ -9,17 +9,6 @@ extern "C"
 {
 #endif
 
-#ifndef _DEBUG
-#define ASSERT_EQUAL(a, b) ((void)0)
-#else
-#define ASSERT_EQUAL(a, b) \
-            (void)(                                                                                     \
-                ((a) == (b)) ||                                                                           \
-                (1 != _CrtDbgReportW(_CRT_ASSERT, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%ls (%d) != %ls (%d)", _CRT_WIDE(#a), (a), _CRT_WIDE(#b), (b))) || \
-                (_CrtDbgBreak(), 0)                                                                     \
-            )
-#endif
-
 HWND FindOwnedWindow(HWND hOwner, LPCTSTR lpClassName, LPCTSTR lpWindowName);
 
 // sz : ICON_BIG or ICON_SMALL
@@ -37,15 +26,6 @@ inline HMENU LoadPopupMenu(HINSTANCE hInstance, DWORD id)
     RemoveMenu(hMenu, 0, MF_BYPOSITION);
     DestroyMenu(hMenu);
     return hPopupMenu;
-}
-
-inline void Replace(TCHAR* str, TCHAR f, TCHAR r)
-{
-    for (TCHAR* s = str; *s != TEXT('\0'); ++s)
-    {
-        if (*s == f)
-            *s = r;
-    }
 }
 
 inline RECT Rect(const POINT pt, const SIZE sz)
