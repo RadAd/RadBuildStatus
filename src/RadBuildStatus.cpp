@@ -11,6 +11,7 @@
 #include "Rad/ListViewPlus.h"
 #include "Rad/WindowsPlus.h"
 #include "Rad/TrayIconHandler.h"
+#include "Rad/AboutDlg.h"
 #include "Utils.h"
 #include "Job.h"
 
@@ -204,7 +205,7 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
         }
     }
 
-    SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(IDI_ICON1), ICON_BIG));
+    SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(IDI_MAIN), ICON_BIG));
     Refresh();
 
 #if 0
@@ -316,6 +317,9 @@ void RootWindow::OnCommand(int id, HWND hwndCtl, UINT codeNotify)
     {
         case ID_FILE_OPEN:
             ShowWindow(*this, SW_NORMAL);
+            break;
+        case ID_FILE_ABOUT:
+            AboutDlg::DoModal(*this);
             break;
         case ID_FILE_EXIT:
             DestroyWindow(*this);

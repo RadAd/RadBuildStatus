@@ -28,6 +28,9 @@
     <ClCompile Include="src\Rad\WindowsPlus.c">
       <Filter>Rad</Filter>
     </ClCompile>
+    <ClCompile Include="src\Rad\AboutDlg.cpp">
+      <Filter>Rad</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -67,6 +70,9 @@
       <Filter>Rad</Filter>
     </ClInclude>
     <ClInclude Include="src\Rad\WindowsPlus.h">
+      <Filter>Rad</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rad\AboutDlg.h">
       <Filter>Rad</Filter>
     </ClInclude>
   </ItemGroup>

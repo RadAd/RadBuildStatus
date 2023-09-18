@@ -50,7 +50,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "res\\RadBuildStatus.ico"
+IDI_MAIN                ICON                    "res\\RadBuildStatus.ico"
 
 IDI_ICON_INFO           ICON                    "res\\StatusInformation_cyan.ico"
 
@@ -71,6 +71,7 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&Open",                       ID_FILE_OPEN
+        MENUITEM "&About...",                   ID_FILE_ABOUT
         MENUITEM "E&xit",                       ID_FILE_EXIT
     END
 END
@@ -83,6 +84,91 @@ BEGIN
         MENUITEM "&Ignore",                     ID_ITEM_IGNORE
         MENUITEM "&Refresh",                    ID_ITEM_REFRESH
     END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 186, 72
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About "
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    PUSHBUTTON      "Close",IDCANCEL,129,7,50,14
+    ICON            "",IDC_ABOUT_APPICON,7,7,20,20
+    LTEXT           "Static",IDC_ABOUT_PRODUCT,35,7,85,8
+    LTEXT           "Version:",IDC_STATIC,35,20,28,8
+    LTEXT           "Static",IDC_ABOUT_VERSION,67,20,57,8
+    PUSHBUTTON      "https://github.com/RadAd/RadBuildStatus",IDC_ABOUT_WEBSITE,7,33,172,14,BS_FLAT
+    PUSHBUTTON      "mailto:adamgates84+software@gmail.com",IDC_ABOUT_MAIL,7,50,172,14,BS_FLAT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 23,9,18,0
+ PRODUCTVERSION 23,9,18,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "0c0904b0"
+        BEGIN
+            VALUE "CompanyName", "RadSoft"
+            VALUE "FileDescription", "Monitor C/I build status"
+            VALUE "FileVersion", "23.9.18.0"
+            VALUE "InternalName", "RadBuildStatus.exe"
+            VALUE "LegalCopyright", "Copyright (C) 2023"
+            VALUE "OriginalFilename", "RadBuildStatus.exe"
+            VALUE "ProductName", "Rad Build Status"
+            VALUE "ProductVersion", "23.9.18.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
 END
 
 #endif    // English (United Kingdom) resources
