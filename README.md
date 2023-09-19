@@ -9,3 +9,7 @@ Monitor C/I build status
 [![Releases](https://img.shields.io/github/release/RadAd/RadBuildStatus.svg)](https://github.com/RadAd/RadBuildStatus/releases/latest)
 [![commits-since](https://img.shields.io/github/commits-since/RadAd/RadBuildStatus/latest.svg)](commits/master)
 [![Build](https://img.shields.io/appveyor/ci/RadAd/RadBuildStatus.svg)](https://ci.appveyor.com/project/RadAd/RadBuildStatus)
+
+
+![Screenshot](docs/RadBuildStatus.png)
+
