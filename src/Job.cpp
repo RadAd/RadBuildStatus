@@ -78,127 +78,134 @@ namespace
 std::vector<Job> GetJobs(const Service& s)
 {
     std::vector<Job> jobs;
-    switch (s.type)
+    try
     {
-    case ServiceType::JENKINS:
-    {
-        const std::string str = LoadUrl((s.url + TEXT("?tree=jobs[name,buildable,url,lastBuild[number,duration,timestamp,result,changeSet[items[msg,author[fullName]]]]]")).c_str());
-        const json data = json::parse(str);
-
-        for (const auto& job : data["jobs"])
+        switch (s.type)
         {
-            Job j = {};
-            j.iGroupId = s.iGroupId;
-            try
-            {
-                j.name = convert(job["name"].get<std::string>());
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            try
-            {
-                j.url = convert(job["url"].get<std::string>());
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            try
-            {
-                j.status = convert(get_or(job["lastBuild"]["result"], "PROCESS"));
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            try
-            {
-                const SYSTEMTIME timestamp_utc = ConvertFromUnixTime(job["lastBuild"]["timestamp"]);
-                SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            j.iIcon = IDI_ICON_INFO;
-            if (j.status == TEXT("SUCCESS"))
-                j.iIcon = IDI_ICON_OK;
-            else if (j.status == TEXT("FAILURE"))
-                j.iIcon = IDI_ICON_ERROR;
-            else if (j.status == TEXT("PROCESS"))
-                j.iIcon = IDI_ICON_RUN;
-            jobs.push_back(j);
-        }
-        break;
-    }
-
-    case ServiceType::APPVEYOR:
-    {
-        std::map<std::tstring, std::tstring> headers;
-        if (!s.authorization.empty())
-            headers[TEXT("Authorization")] = TEXT("Bearer ") + s.authorization;
-        headers[TEXT("Content-Type")] = TEXT("application/json");
-        const std::string str = LoadUrl(s.url.c_str(), headers);
-        const json data = json::parse(str);
-
-        for (const auto& job : data)
+        case ServiceType::JENKINS:
         {
-            Job j = {};
-            j.iGroupId = s.iGroupId;
-            try
-            {
-                j.name = convert(job["name"].get<std::string>());
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            try
-            {
-                const std::tstring accountName = convert(job["accountName"].get<std::string>());
-                const std::tstring slug = convert(job["slug"].get<std::string>());
-                j.url = TEXT("https://ci.appveyor.com/project/") + accountName + TEXT("/") + slug;
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            try
-            {
-                j.status = convert(job["builds"][0]["status"].get<std::string>());
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            try
-            {
-                const SYSTEMTIME timestamp_utc = ConvertFromISO8601(job["builds"][0]["committed"]);
-                SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
-            }
-            catch (const json::type_error& e)
-            {
-                RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-            }
-            j.iIcon = IDI_ICON_INFO;
-            if (j.status == TEXT("success"))
-                j.iIcon = IDI_ICON_OK;
-            else if (j.status == TEXT("failure"))
-                j.iIcon = IDI_ICON_ERROR;
-            else if (j.status == TEXT("starting"))
-                j.iIcon = IDI_ICON_RUN;
-            else if (j.status == TEXT("running"))
-                j.iIcon = IDI_ICON_RUN;
-            jobs.push_back(j);
-        }
-        break;
-    }
+            const std::string str = LoadUrl((s.url + TEXT("?tree=jobs[name,buildable,url,lastBuild[number,duration,timestamp,result,changeSet[items[msg,author[fullName]]]]]")).c_str());
+            const json data = json::parse(str);
 
-    default:
-        _ASSERT(false);
-        break;
+            for (const auto& job : data["jobs"])
+            {
+                Job j = {};
+                j.iGroupId = s.iGroupId;
+                try
+                {
+                    j.name = convert(job["name"].get<std::string>());
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    j.url = convert(job["url"].get<std::string>());
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    j.status = convert(get_or(job["lastBuild"]["result"], "PROCESS"));
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    const SYSTEMTIME timestamp_utc = ConvertFromUnixTime(job["lastBuild"]["timestamp"]);
+                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                j.iIcon = IDI_ICON_INFO;
+                if (j.status == TEXT("SUCCESS"))
+                    j.iIcon = IDI_ICON_OK;
+                else if (j.status == TEXT("FAILURE"))
+                    j.iIcon = IDI_ICON_ERROR;
+                else if (j.status == TEXT("PROCESS"))
+                    j.iIcon = IDI_ICON_RUN;
+                jobs.push_back(j);
+            }
+            break;
+        }
+
+        case ServiceType::APPVEYOR:
+        {
+            std::map<std::tstring, std::tstring> headers;
+            if (!s.authorization.empty())
+                headers[TEXT("Authorization")] = TEXT("Bearer ") + s.authorization;
+            headers[TEXT("Content-Type")] = TEXT("application/json");
+            const std::string str = LoadUrl(s.url.c_str(), headers);
+            const json data = json::parse(str);
+
+            for (const auto& job : data)
+            {
+                Job j = {};
+                j.iGroupId = s.iGroupId;
+                try
+                {
+                    j.name = convert(job["name"].get<std::string>());
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    const std::tstring accountName = convert(job["accountName"].get<std::string>());
+                    const std::tstring slug = convert(job["slug"].get<std::string>());
+                    j.url = TEXT("https://ci.appveyor.com/project/") + accountName + TEXT("/") + slug;
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    j.status = convert(job["builds"][0]["status"].get<std::string>());
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    const SYSTEMTIME timestamp_utc = ConvertFromISO8601(job["builds"][0]["committed"]);
+                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                }
+                catch (const json::type_error& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                j.iIcon = IDI_ICON_INFO;
+                if (j.status == TEXT("success"))
+                    j.iIcon = IDI_ICON_OK;
+                else if (j.status == TEXT("failure"))
+                    j.iIcon = IDI_ICON_ERROR;
+                else if (j.status == TEXT("starting"))
+                    j.iIcon = IDI_ICON_RUN;
+                else if (j.status == TEXT("running"))
+                    j.iIcon = IDI_ICON_RUN;
+                jobs.push_back(j);
+            }
+            break;
+        }
+
+        default:
+            _ASSERT(false);
+            break;
+        }
+    }
+    catch (const json::type_error& e)
+    {
+        RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
     }
     return jobs;
 }
