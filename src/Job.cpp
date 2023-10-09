@@ -205,7 +205,7 @@ std::vector<Job> GetJobs(const Service& s)
     }
     catch (const json::type_error& e)
     {
-        RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+        RadLogA(LogLevel::LOG_ERROR, e.what(), SRC_LOC_A);
     }
     return jobs;
 }
