@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include "..\resource.h"
 #include "Rad/Log.h"
+#include "Rad/Format.h"
 
 using json = nlohmann::json;
 
@@ -37,14 +38,18 @@ namespace
         else
         {
             DWORD dwError = GetLastError();
-#if 0
-            DWORD error = 0;
-            TCHAR buf[1024];
-            DWORD len = ARRAYSIZE(buf);
-            if (!InternetGetLastResponseInfo(&error, buf, &len))
-                dwError = GetLastError();
-            RadLog(LogLevel::LOG_WARN, format(TEXT("%d:%s"), error, buf), SRC_LOC);
-#endif
+            if (dwError == ERROR_SUCCESS)
+            {
+                TCHAR buf[1024] = TEXT("");
+                DWORD len = ARRAYSIZE(buf);
+                InternetGetLastResponseInfo(&dwError, buf, &len);
+                RadLog(LogLevel::LOG_ERROR, Format(TEXT("%d: %s"), dwError, buf), SRC_LOC);
+            }
+            else
+            {
+                std::wstring err = WinError::getMessage(dwError, nullptr, __FUNCTIONW__);
+                RadLog(LogLevel::LOG_ERROR, err.c_str(), SRC_LOC);
+            }
         }
 
         return ret;
@@ -85,6 +90,9 @@ std::vector<Job> GetJobs(const Service& s)
         case ServiceType::JENKINS:
         {
             const std::string str = LoadUrl((s.url + TEXT("?tree=jobs[name,buildable,url,lastBuild[number,duration,timestamp,result,changeSet[items[msg,author[fullName]]]]]")).c_str());
+            if (str.empty())
+                break;
+
             const json data = json::parse(str);
 
             for (const auto& job : data["jobs"])
@@ -95,7 +103,7 @@ std::vector<Job> GetJobs(const Service& s)
                 {
                     j.name = convert(job["name"].get<std::string>());
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -103,7 +111,7 @@ std::vector<Job> GetJobs(const Service& s)
                 {
                     j.url = convert(job["url"].get<std::string>());
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -111,7 +119,7 @@ std::vector<Job> GetJobs(const Service& s)
                 {
                     j.status = convert(get_or(job["lastBuild"]["result"], "PROCESS"));
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -120,7 +128,7 @@ std::vector<Job> GetJobs(const Service& s)
                     const SYSTEMTIME timestamp_utc = ConvertFromUnixTime(job["lastBuild"]["timestamp"]);
                     SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -143,6 +151,9 @@ std::vector<Job> GetJobs(const Service& s)
                 headers[TEXT("Authorization")] = TEXT("Bearer ") + s.authorization;
             headers[TEXT("Content-Type")] = TEXT("application/json");
             const std::string str = LoadUrl(s.url.c_str(), headers);
+            if (str.empty())
+                break;
+
             const json data = json::parse(str);
 
             for (const auto& job : data)
@@ -153,7 +164,7 @@ std::vector<Job> GetJobs(const Service& s)
                 {
                     j.name = convert(job["name"].get<std::string>());
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -163,7 +174,7 @@ std::vector<Job> GetJobs(const Service& s)
                     const std::tstring slug = convert(job["slug"].get<std::string>());
                     j.url = TEXT("https://ci.appveyor.com/project/") + accountName + TEXT("/") + slug;
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -171,7 +182,7 @@ std::vector<Job> GetJobs(const Service& s)
                 {
                     j.status = convert(job["builds"][0]["status"].get<std::string>());
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -180,7 +191,7 @@ std::vector<Job> GetJobs(const Service& s)
                     const SYSTEMTIME timestamp_utc = ConvertFromISO8601(job["builds"][0]["committed"]);
                     SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
                 }
-                catch (const json::type_error& e)
+                catch (const json::exception& e)
                 {
                     RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
                 }
@@ -203,7 +214,7 @@ std::vector<Job> GetJobs(const Service& s)
             break;
         }
     }
-    catch (const json::type_error& e)
+    catch (const json::exception& e)
     {
         RadLogA(LogLevel::LOG_ERROR, e.what(), SRC_LOC_A);
     }
