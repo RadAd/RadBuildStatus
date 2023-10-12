@@ -418,6 +418,8 @@ void RootWindow::Refresh()
 
     for (const Job& j : jobs)
     {
+        const bool bIgnored = IsIgnored(GetId(j));
+
         //ListView_InsertItemText(m_hWndChild, iItem, name.c_str());
         LVITEM item;
         ZeroMemory(&item, sizeof(LVITEM));
@@ -427,6 +429,12 @@ void RootWindow::Refresh()
         item.iGroupId = j.iGroupId;
         item.iImage = m_IconMap[j.iIcon];
         item.lParam = (LPARAM) (j.url.empty() ? nullptr : _wcsdup(j.url.c_str()));
+        if (bIgnored)
+        {
+            item.mask |= LVIF_STATE;
+            item.stateMask |= LVIS_CUT;
+            item.state |= LVIS_CUT;
+        }
         const int iItem = ListView_InsertItem(m_hWndChild, &item);
         ListView_SetItemText(m_hWndChild, iItem, 1, const_cast<LPTSTR>(j.status.c_str()));
 
@@ -439,7 +447,7 @@ void RootWindow::Refresh()
         // TODO
         // GetDurationFormatEx
 
-        if (!IsIgnored(GetId(j)) && j.iIcon > iMaxIcon)
+        if (!bIgnored && j.iIcon > iMaxIcon)
             iMaxIcon = j.iIcon;
     }
 
