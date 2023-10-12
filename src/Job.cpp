@@ -48,7 +48,7 @@ namespace
             }
             else
             {
-                std::wstring err = WinError::getMessage(dwError, nullptr, __FUNCTIONW__);
+                std::wstring err = WinError::getMessage(dwError, TEXT("Wininet.dll"), __FUNCTIONW__);
                 RadLog(LogLevel::LOG_ERROR, err.c_str(), SRC_LOC);
             }
         }
