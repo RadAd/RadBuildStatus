@@ -181,8 +181,9 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     const HIMAGELIST hImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK | ILC_COLOR32, static_cast<int>(hIcons.size()), 0);
     for (const HICON hIcon : hIcons)
         ImageList_AddIcon(hImageList, hIcon);
+    _ASSERT(ImageList_GetImageCount(hImageList) == hIcons.size());
 
-    m_hWndChild = ListView_Create(*this, RECT(), WS_CHILD | WS_VISIBLE | LVS_ALIGNTOP | LVS_REPORT, LVS_EX_FLATSB | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_COLUMNOVERFLOW, 101);
+    m_hWndChild = ListView_Create(*this, RECT(), WS_CHILD | WS_VISIBLE | LVS_ALIGNTOP | LVS_REPORT, LVS_EX_FLATSB | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_COLUMNOVERFLOW | LVS_EX_LABELTIP, 101);
     _ASSERT(m_hWndChild);
     ListView_EnableGroupView(m_hWndChild, TRUE);
     //ListView_SetImageList(m_hWndChild, hImageList, LVSIL_NORMAL);
