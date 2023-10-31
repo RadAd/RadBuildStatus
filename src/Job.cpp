@@ -4,6 +4,7 @@
 #include "..\resource.h"
 #include "Rad/Log.h"
 #include "Rad/Format.h"
+#include "Rad/MemoryPlus.h"
 
 using json = nlohmann::json;
 
@@ -21,8 +22,8 @@ namespace
         for (const auto& h : headers)
             strHeader += h.first + TEXT(": ") + h.second + TEXT("\n");
 
-        const auto hInternetSession = MakeHandleDeleter(InternetOpen(TEXT("RadBuildStatus"), INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0), InternetCloseHandle);
-        const auto hURL = MakeHandleDeleter(InternetOpenUrl(hInternetSession.get(), strUrl, strHeader.c_str(), DWORD(strHeader.size()), INTERNET_FLAG_RELOAD, 0), InternetCloseHandle);
+        const auto hInternetSession = MakeUniqueHandle(InternetOpen(TEXT("RadBuildStatus"), INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0), InternetCloseHandle);
+        const auto hURL = MakeUniqueHandle(InternetOpenUrl(hInternetSession.get(), strUrl, strHeader.c_str(), DWORD(strHeader.size()), INTERNET_FLAG_RELOAD, 0), InternetCloseHandle);
 
         std::string ret;
         if (hURL)
@@ -47,7 +48,7 @@ namespace
             }
             else
             {
-                std::wstring err = WinError::getMessage(dwError, nullptr, __FUNCTIONW__);
+                std::wstring err = WinError::getMessage(dwError, TEXT("Wininet.dll"), __FUNCTIONW__);
                 RadLog(LogLevel::LOG_ERROR, err.c_str(), SRC_LOC);
             }
         }
@@ -139,6 +140,8 @@ std::vector<Job> GetJobs(const Service& s)
                     j.iIcon = IDI_ICON_ERROR;
                 else if (j.status == TEXT("PROCESS"))
                     j.iIcon = IDI_ICON_RUN;
+                else if (j.status == TEXT("ABORTED"))
+                    j.iIcon = IDI_ICON_ERROR;
                 jobs.push_back(j);
             }
             break;

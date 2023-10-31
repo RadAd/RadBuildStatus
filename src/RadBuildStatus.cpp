@@ -10,10 +10,10 @@
 
 #include "Rad/Log.h"
 #include "Rad/ListViewPlus.h"
+#include "Rad/MemoryPlus.h"
 #include "Rad/WindowsPlus.h"
 #include "Rad/TrayIconHandler.h"
 #include "Rad/AboutDlg.h"
-#include "Utils.h"
 #include "Job.h"
 
 #include "..\resource.h"
@@ -127,8 +127,8 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     //const HINSTANCE hInstance = GetWindowInstance(*this);
     const HINSTANCE hInstance = g_hInstance;
 
-    auto hKey = MakeHandleDeleter<HKEY>(NULL, RegCloseKey);
-    RegOpenKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\RadSoft\\RadBuildStatus"), out_ptr(hKey));
+    auto hKey = MakeUniqueHandle<HKEY>(NULL, RegCloseKey);
+    RegOpenKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\RadSoft\\RadBuildStatus"), OutPtr(hKey));
     if (hKey)
     {
         RECT rc;
@@ -139,8 +139,8 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
         rc.bottom = rc.top + RegGetDWORD(hKey.get(), TEXT("Height"), rc.bottom - rc.top);
         SetWindowPos(*this, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOOWNERZORDER);
 
-        auto hKeyServices = MakeHandleDeleter<HKEY>(NULL, RegCloseKey);
-        RegOpenKey(hKey.get(), TEXT("Services"), out_ptr(hKeyServices));
+        auto hKeyServices = MakeUniqueHandle<HKEY>(NULL, RegCloseKey);
+        RegOpenKey(hKey.get(), TEXT("Services"), OutPtr(hKeyServices));
         if (hKeyServices)
         {
             TCHAR keyname[1024];
@@ -148,8 +148,8 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
             DWORD len;
             while (len = ARRAYSIZE(keyname), RegEnumKeyEx(hKeyServices.get(), i++, keyname, &len, nullptr, nullptr, nullptr, nullptr) == ERROR_SUCCESS)
             {
-                auto hKeyService = MakeHandleDeleter<HKEY>(NULL, RegCloseKey);
-                RegOpenKey(hKeyServices.get(), keyname, out_ptr(hKeyService));
+                auto hKeyService = MakeUniqueHandle<HKEY>(NULL, RegCloseKey);
+                RegOpenKey(hKeyServices.get(), keyname, OutPtr(hKeyService));
                 if (hKeyService)
                 {
                     Service s = {};
@@ -226,8 +226,8 @@ void RootWindow::OnDestroy()
 {
     PostQuitMessage(0);
 
-    auto hKey = MakeHandleDeleter<HKEY>(NULL, RegCloseKey);
-    RegCreateKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\RadSoft\\RadBuildStatus"), out_ptr(hKey));
+    auto hKey = MakeUniqueHandle<HKEY>(NULL, RegCloseKey);
+    RegCreateKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\RadSoft\\RadBuildStatus"), OutPtr(hKey));
 
     if (hKey)
     {
@@ -309,7 +309,7 @@ void RootWindow::OnTimer(UINT id)
 void RootWindow::OnContextMenu(HWND hWndContext, UINT xPos, UINT yPos)
 {
     const DWORD menuId = hWndContext == NULL ? IDR_MENU1 : IDR_MENU2;
-    const auto hMenu = MakeHandleDeleter(LoadPopupMenu(g_hInstance, menuId), DestroyMenu);
+    const auto hMenu = MakeUniqueHandle(LoadPopupMenu(g_hInstance, menuId), DestroyMenu);
     TrackPopupMenu(hMenu.get(), TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON, xPos, yPos, 0, *this, nullptr);
 }
 
