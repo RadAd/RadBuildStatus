@@ -46,9 +46,14 @@ namespace
                 InternetGetLastResponseInfo(&dwError, buf, &len);
                 RadLog(LogLevel::LOG_ERROR, Format(TEXT("%d: %s"), dwError, buf), SRC_LOC);
             }
-            else
+            else if (dwError >= INTERNET_ERROR_BASE && dwError < INTERNET_ERROR_LAST)
             {
                 std::wstring err = WinError::getMessage(dwError, TEXT("Wininet.dll"), __FUNCTIONW__);
+                RadLog(LogLevel::LOG_ERROR, err.c_str(), SRC_LOC);
+            }
+            else
+            {
+                std::wstring err = WinError::getMessage(dwError, nullptr, __FUNCTIONW__);
                 RadLog(LogLevel::LOG_ERROR, err.c_str(), SRC_LOC);
             }
         }
