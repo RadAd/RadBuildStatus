@@ -405,6 +405,12 @@ LRESULT RootWindow::HandleMessage(const UINT uMsg, const WPARAM wParam, const LP
 
 void RootWindow::Refresh()
 {
+    static bool bInRefresh = false;
+    if (bInRefresh)
+        return;
+
+    bInRefresh = true;
+
     std::vector<Job> jobs;
     for (const Service& s : m_services)
     {
@@ -439,11 +445,14 @@ void RootWindow::Refresh()
         const int iItem = ListView_InsertItem(m_hWndChild, &item);
         ListView_SetItemText(m_hWndChild, iItem, 1, const_cast<LPTSTR>(j.status.c_str()));
 
-        TCHAR bufTimestamp[200];
-        int len = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &j.timestamp, NULL, bufTimestamp, ARRAYSIZE(bufTimestamp));
-        bufTimestamp[len - 1] = TEXT(' ');
-        GetTimeFormat(LOCALE_USER_DEFAULT, 0, &j.timestamp, NULL, bufTimestamp + len, ARRAYSIZE(bufTimestamp) - len);
-        ListView_SetItemText(m_hWndChild, iItem, 2, bufTimestamp);
+        if (j.timestamp.wYear != 0)
+        {
+            TCHAR bufTimestamp[200];
+            int len = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &j.timestamp, NULL, bufTimestamp, ARRAYSIZE(bufTimestamp));
+            bufTimestamp[len - 1] = TEXT(' ');
+            GetTimeFormat(LOCALE_USER_DEFAULT, 0, &j.timestamp, NULL, bufTimestamp + len, ARRAYSIZE(bufTimestamp) - len);
+            ListView_SetItemText(m_hWndChild, iItem, 2, bufTimestamp);
+        }
 
         // TODO
         // GetDurationFormatEx
@@ -454,6 +463,8 @@ void RootWindow::Refresh()
 
     SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(iMaxIcon), ICON_BIG));
     m_trayIcon.Update();
+
+    bInRefresh = false;
 }
 
 bool Run(_In_ const LPCTSTR lpCmdLine, _In_ const int nShowCmd)

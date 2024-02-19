@@ -123,16 +123,27 @@ std::vector<Job> GetJobs(const Service& s)
                 }
                 try
                 {
-                    j.status = convert(get_or(job["lastBuild"]["result"], "PROCESS"));
-                }
-                catch (const json::exception& e)
-                {
-                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
-                }
-                try
-                {
-                    const SYSTEMTIME timestamp_utc = ConvertFromUnixTime(job["lastBuild"]["timestamp"]);
-                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                    const json lastbuild = job["lastBuild"];
+                    if (!lastbuild.is_null())
+                    {
+                        try
+                        {
+                            j.status = convert(get_or(lastbuild["result"], "PROCESS"));
+                        }
+                        catch (const json::exception& e)
+                        {
+                            RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                        }
+                        try
+                        {
+                            const SYSTEMTIME timestamp_utc = ConvertFromUnixTime(lastbuild["timestamp"]);
+                            SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                        }
+                        catch (const json::exception& e)
+                        {
+                            RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                        }
+                    }
                 }
                 catch (const json::exception& e)
                 {
