@@ -71,9 +71,13 @@ void TrayIconHandler::AddTrayIcon(DWORD dwMessage)
     nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
     nid.uCallbackMessage = WM_TRAY;
     wcscpy_s(nid.szTip, m_strTitle);
-    nid.hIcon = (HICON)SendMessage(m_hWnd, WM_GETICON, ICON_SMALL, 0);
+    nid.hIcon = (HICON) SendMessage(m_hWnd, WM_GETICON, ICON_SMALL, 0);
     if (nid.hIcon == NULL)
-        nid.hIcon = (HICON)SendMessage(m_hWnd, WM_GETICON, ICON_BIG, 0);
+        nid.hIcon = (HICON) SendMessage(m_hWnd, WM_GETICON, ICON_BIG, 0);
+    if (nid.hIcon == NULL)
+        nid.hIcon = (HICON) GetClassLongPtr(m_hWnd, GCLP_HICONSM);
+    if (nid.hIcon == NULL)
+        nid.hIcon = (HICON) GetClassLongPtr(m_hWnd, GCLP_HICON);
     if (nid.hIcon == NULL)
         nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     Shell_NotifyIcon(dwMessage, &nid);

@@ -37,6 +37,12 @@ public:
     static ATOM Register() { return WindowManager<RootWindow>::Register(); }
     static RootWindow* Create() { return WindowManager<RootWindow>::Create(); }
 
+    static void GetWndClass(WNDCLASS& wc)
+    {
+        Window::GetWndClass(wc);
+        wc.hIcon = LoadIcon(wc.hInstance, MAKEINTRESOURCE(IDI_MAIN));
+    }
+
 protected:
     static void GetCreateWindow(CREATESTRUCT& cs);
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
