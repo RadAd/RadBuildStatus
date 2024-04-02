@@ -28,12 +28,23 @@ namespace
         std::string ret;
         if (hURL)
         {
-            DWORD dwBytesRead = 1;
-            for (; dwBytesRead > 0;)
+            DWORD status = 0;
+            DWORD statuslen = sizeof(status);
+            HttpQueryInfo(hURL.get(), HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &statuslen, nullptr);
+
+            if (status != 200)
             {
+                TCHAR buf[1024] = TEXT("");
+                DWORD len = ARRAYSIZE(buf);
+                HttpQueryInfo(hURL.get(), HTTP_QUERY_STATUS_TEXT, buf, &len, nullptr);
+                RadLog(LogLevel::LOG_ERROR, Format(TEXT("%d: %s"), status, buf), SRC_LOC);
+            }
+            else
+            {
+                DWORD dwBytesRead = 0;
                 char buf[1024];
-                InternetReadFile(hURL.get(), buf, (DWORD) sizeof(buf), &dwBytesRead);
-                ret.append(buf, dwBytesRead);
+                while (InternetReadFile(hURL.get(), buf, (DWORD) sizeof(buf), &dwBytesRead), dwBytesRead > 0)
+                    ret.append(buf, dwBytesRead);
             }
         }
         else
@@ -157,6 +168,69 @@ std::vector<Job> GetJobs(const Service& s)
                 else if (j.status == TEXT("PROCESS"))
                     j.iIcon = IDI_ICON_RUN;
                 else if (j.status == TEXT("ABORTED"))
+                    j.iIcon = IDI_ICON_ERROR;
+                jobs.push_back(j);
+            }
+            break;
+        }
+
+        case ServiceType::GITLAB:
+        {
+            std::map<std::tstring, std::tstring> headers;
+            if (!s.token.empty())
+                headers[TEXT("PRIVATE-TOKEN")] = s.token;
+            const std::string str = LoadUrl(s.url.c_str(), headers);
+            if (str.empty())
+                break;
+
+            const json data = json::parse(str);
+
+            for (const auto& job : data)
+            {
+                Job j = {};
+                j.iGroupId = s.iGroupId;
+                try
+                {
+                    j.name = convert(job["ref"].get<std::string>());
+                }
+                catch (const json::exception& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    j.url = convert(job["web_url"].get<std::string>());
+                }
+                catch (const json::exception& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    j.status = convert(job["status"].get<std::string>());
+                }
+                catch (const json::exception& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+                try
+                {
+                    const SYSTEMTIME timestamp_utc = ConvertFromISO8601(job["updated_at"]);
+                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                }
+                catch (const json::exception& e)
+                {
+                    RadLogA(LogLevel::LOG_WARN, e.what(), SRC_LOC_A);
+                }
+
+                j.iIcon = IDI_ICON_INFO;
+                if (j.status == TEXT("success"))
+                    j.iIcon = IDI_ICON_OK;
+                else if (j.status == TEXT("failed"))
+                    j.iIcon = IDI_ICON_ERROR;
+                else if (j.status == TEXT("running"))
+                    j.iIcon = IDI_ICON_RUN;
+                else if (j.status == TEXT("canceled"))
                     j.iIcon = IDI_ICON_ERROR;
                 jobs.push_back(j);
             }

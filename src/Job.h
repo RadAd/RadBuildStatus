@@ -8,6 +8,7 @@ enum class ServiceType
 {
     NONE,
     JENKINS,
+    GITLAB,
     APPVEYOR,
 };
 
@@ -27,6 +28,7 @@ struct Service
     ServiceType type;
     std::tstring url;
     std::tstring authorization;
+    std::tstring token;
 
     int iGroupId;
 };

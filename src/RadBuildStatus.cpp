@@ -157,10 +157,13 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
                     const std::tstring type = RegGetString(hKeyService.get(), TEXT("type"), TEXT(""));
                     if (type == TEXT("jenkins"))
                         s.type = ServiceType::JENKINS;
+                    else if (type == TEXT("gitlab"))
+                        s.type = ServiceType::GITLAB;
                     else if (type == TEXT("appveyor"))
                         s.type = ServiceType::APPVEYOR;
                     s.url = RegGetString(hKeyService.get(), TEXT("url"), TEXT(""));
                     s.authorization = RegGetString(hKeyService.get(), TEXT("authorization"), TEXT(""));
+                    s.token = RegGetString(hKeyService.get(), TEXT("token"), TEXT(""));
                     m_services.push_back(s);
                 }
             }
@@ -381,7 +384,10 @@ void RootWindow::OnInitMenuPopup(HMENU hMenu, UINT item, BOOL fSystemMenu)
 
 LRESULT RootWindow::HandleMessage(const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
+    m_trayIcon.HandleMessage(*this, uMsg, wParam, lParam);
+
     LRESULT ret = 0;
+
     switch (uMsg)
     {
         HANDLE_MSG(WM_CREATE, OnCreate);
@@ -396,7 +402,6 @@ LRESULT RootWindow::HandleMessage(const UINT uMsg, const WPARAM wParam, const LP
         HANDLE_MSG(WM_INITMENUPOPUP, OnInitMenuPopup);
     }
 
-    m_trayIcon.HandleMessage(*this, uMsg, wParam, lParam);
     if (!IsHandled())
         ret = Window::HandleMessage(uMsg, wParam, lParam);
 
@@ -410,6 +415,8 @@ void RootWindow::Refresh()
         return;
 
     bInRefresh = true;
+
+    const HCURSOR hOldCursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
     std::vector<Job> jobs;
     for (const Service& s : m_services)
@@ -463,6 +470,8 @@ void RootWindow::Refresh()
 
     SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(iMaxIcon), ICON_BIG));
     m_trayIcon.Update();
+
+    SetCursor(hOldCursor);
 
     bInRefresh = false;
 }
