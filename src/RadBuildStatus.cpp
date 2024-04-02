@@ -197,6 +197,11 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     ListView_EnableGroupView(m_hWndChild, TRUE);
     //ListView_SetImageList(m_hWndChild, hImageList, LVSIL_NORMAL);
     ListView_SetImageList(m_hWndChild, hImageList, LVSIL_SMALL);
+    if (lpCreateStruct->dwExStyle & WS_EX_TOPMOST)
+    {
+        const HWND hToolTip = ListView_GetToolTips(m_hWndChild);
+        SetWindowPos(hToolTip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
 
     ListView_AddColumn(m_hWndChild, TEXT("Name"), LVCFMT_LEFT, 200);
     ListView_AddColumn(m_hWndChild, TEXT("Status"), LVCFMT_LEFT, 100);
