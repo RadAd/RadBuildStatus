@@ -5,6 +5,7 @@
 #include "Rad/Log.h"
 #include "Rad/Format.h"
 #include "Rad/MemoryPlus.h"
+#include "Rad/WinError.h"
 
 using json = nlohmann::json;
 
@@ -30,14 +31,15 @@ namespace
         {
             DWORD status = 0;
             DWORD statuslen = sizeof(status);
-            HttpQueryInfo(hURL.get(), HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &statuslen, nullptr);
+            CHECK_LE_THROW(HttpQueryInfo(hURL.get(), HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &statuslen, nullptr));
 
             if (status != 200)
             {
                 TCHAR buf[1024] = TEXT("");
                 DWORD len = ARRAYSIZE(buf);
-                HttpQueryInfo(hURL.get(), HTTP_QUERY_STATUS_TEXT, buf, &len, nullptr);
-                RadLog(LogLevel::LOG_ERROR, Format(TEXT("%d: %s"), status, buf), SRC_LOC);
+                CHECK_LE_THROW(HttpQueryInfo(hURL.get(), HTTP_QUERY_STATUS_TEXT, buf, &len, nullptr));
+                //RadLog(LogLevel::LOG_ERROR, Format(TEXT("%d: %s"), status, buf), SRC_LOC);
+                throw std::runtime_error(Format("%d: %S", status, buf));    // TODO Use a wstring exception. Here we are converting bu(WCHAR) to Format(ASCII).
             }
             else
             {
@@ -55,18 +57,13 @@ namespace
                 TCHAR buf[1024] = TEXT("");
                 DWORD len = ARRAYSIZE(buf);
                 InternetGetLastResponseInfo(&dwError, buf, &len);
-                RadLog(LogLevel::LOG_ERROR, Format(TEXT("%d: %s"), dwError, buf), SRC_LOC);
+                //RadLog(LogLevel::LOG_ERROR, Format(TEXT("%d: %s"), dwError, buf), SRC_LOC);
+                throw std::runtime_error(Format("%d: %S", dwError, buf));    // TODO Use a wstring exception. Here we are converting bu(WCHAR) to Format(ASCII).
             }
             else if (dwError >= INTERNET_ERROR_BASE && dwError < INTERNET_ERROR_LAST)
-            {
-                std::wstring err = WinError::getMessage(dwError, TEXT("Wininet.dll"), __FUNCTIONW__);
-                RadLog(LogLevel::LOG_ERROR, err.c_str(), SRC_LOC);
-            }
+                throw WinError({ dwError, TEXT("Wininet.dll"), __FUNCTIONW__ });
             else
-            {
-                std::wstring err = WinError::getMessage(dwError, nullptr, __FUNCTIONW__);
-                RadLog(LogLevel::LOG_ERROR, err.c_str(), SRC_LOC);
-            }
+                throw WinError({ dwError, nullptr, __FUNCTIONW__ });
         }
 
         return ret;
@@ -92,7 +89,7 @@ namespace
         li.QuadPart += 116444736000000000;
         FILETIME ft = { li.LowPart, li.HighPart };
         SYSTEMTIME timestamp_utc = {};
-        FileTimeToSystemTime(&ft, &timestamp_utc);
+        CHECK_LE_THROW(FileTimeToSystemTime(&ft, &timestamp_utc));
         return timestamp_utc;
     }
 }
@@ -148,7 +145,7 @@ std::vector<Job> GetJobs(const Service& s)
                         try
                         {
                             const SYSTEMTIME timestamp_utc = ConvertFromUnixTime(lastbuild["timestamp"]);
-                            SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                            CHECK_LE_THROW(SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp));
                         }
                         catch (const json::exception& e)
                         {
@@ -216,7 +213,7 @@ std::vector<Job> GetJobs(const Service& s)
                 try
                 {
                     const SYSTEMTIME timestamp_utc = ConvertFromISO8601(job["updated_at"]);
-                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                    CHECK_LE_THROW(SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp));
                 }
                 catch (const json::exception& e)
                 {
@@ -282,7 +279,7 @@ std::vector<Job> GetJobs(const Service& s)
                 try
                 {
                     const SYSTEMTIME timestamp_utc = ConvertFromISO8601(job["builds"][0]["committed"]);
-                    SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp);
+                    CHECK_LE_THROW(SystemTimeToTzSpecificLocalTime(nullptr, &timestamp_utc, &j.timestamp));
                 }
                 catch (const json::exception& e)
                 {
@@ -307,9 +304,37 @@ std::vector<Job> GetJobs(const Service& s)
             break;
         }
     }
+#if 0
     catch (const json::exception& e)
     {
-        RadLogA(LogLevel::LOG_ERROR, e.what(), SRC_LOC_A);
+        Job j = {};
+        j.iGroupId = s.iGroupId;
+        j.name = e.what();
+        j.status = TEXT("Error");
+        j.iIcon = IDI_MAIN;
+        jobs.push_back(j);
+        RadLogA(LogLevel::LOG_DEBUG, e.what(), SRC_LOC_A);
+    }
+#endif
+    catch (const WinError& e)
+    {
+        Job j = {};
+        j.iGroupId = s.iGroupId;
+        j.name = e.getMessage();
+        j.status = TEXT("Error");
+        j.iIcon = IDI_MAIN;
+        jobs.push_back(j);
+        RadLog(LogLevel::LOG_DEBUG, e.getMessage(), SRC_LOC);
+    }
+    catch (const std::exception& e)
+    {
+        Job j = {};
+        j.iGroupId = s.iGroupId;
+        j.name = Format(TEXT("%S"), e.what());  // TODO Convert to WCHAR
+        j.status = TEXT("Error");
+        j.iIcon = IDI_MAIN;
+        jobs.push_back(j);
+        RadLogA(LogLevel::LOG_DEBUG, e.what(), SRC_LOC_A);
     }
     return jobs;
 }

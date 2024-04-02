@@ -23,4 +23,4 @@ struct WinError
     static std::wstring getMessage(DWORD dwError, LPCWSTR szModule, LPCWSTR szContext);
 };
 
-#define CHECK_LE_THROW(x) if (!(x)) throw WinError(GetLastError(), nullptr, TEXT(#x))
+#define CHECK_LE_THROW(x) if (!(x)) throw WinError({ GetLastError(), nullptr, TEXT(#x) })
