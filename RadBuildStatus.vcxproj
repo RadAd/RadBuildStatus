@@ -127,6 +127,7 @@
     <Image Include="res\StatusCriticalError.ico" />
     <Image Include="res\StatusInformation_cyan.ico" />
     <Image Include="res\StatusOK.ico" />
+    <Image Include="res\StatusPending.ico" />
     <Image Include="res\StatusRun.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

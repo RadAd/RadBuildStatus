@@ -60,6 +60,8 @@ IDI_ICON_ERROR          ICON                    "res\\StatusCriticalError.ico"
 
 IDI_ICON_RUN            ICON                    "res\\StatusRun.ico"
 
+IDI_ICON_PENDING        ICON                    "res\\StatusPending.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

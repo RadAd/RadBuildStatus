@@ -105,6 +105,9 @@
     <Image Include="res\StatusInformation_cyan.ico">
       <Filter>Resources</Filter>
     </Image>
+    <Image Include="res\StatusPending.ico">
+      <Filter>Resources</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RadBuildStatus.rc" />
