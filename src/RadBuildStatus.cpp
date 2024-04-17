@@ -177,7 +177,7 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     }
 
     std::vector<HICON> hIcons;
-    for (const DWORD id : { IDI_ICON_INFO, IDI_ICON_ERROR, IDI_ICON_OK, IDI_ICON_RUN })
+    for (const DWORD id : { IDI_ICON_INFO, IDI_ICON_ERROR, IDI_ICON_OK, IDI_ICON_RUN, IDI_ICON_PENDING })
     {
         const HICON hIcon = LoadIconImage(hInstance, MAKEINTRESOURCE(id), ICON_SMALL);
         if (hIcon)
