@@ -13,3 +13,7 @@ Monitor C/I build status
 
 ![Screenshot](docs/RadBuildStatus.png)
 
+## Supports:
+ + Jenkins
+ + Gitlab
+ + Appveyor
