@@ -1,20 +1,9 @@
 #pragma once
 
-#ifdef UNICODE
+#ifdef _UNICODE
 #define tstring wstring
-inline std::wstring convert(const std::string& m)
-{
-    wchar_t msg[1024];
-    const int sz = MultiByteToWideChar(CP_UTF8, 0, m.c_str(), int(m.length()), msg, ARRAYSIZE(msg));
-    msg[sz] = L'\0';
-    return msg;
-}
 #else
 #define tstring string
-inline const std::string convert(const std::string& m)
-{
-    return m;
-}
 #endif
 
 inline DWORD RegGetDWORD(HKEY hKey, LPCTSTR lpValue, DWORD Value)

@@ -115,7 +115,7 @@ std::vector<Job> GetJobs(const Service& s)
                 j.iGroupId = s.iGroupId;
                 try
                 {
-                    j.name = convert(job["name"].get<std::string>());
+                    j.name = s2t(job["name"].get<std::string>());
                 }
                 catch (const json::exception& e)
                 {
@@ -123,7 +123,7 @@ std::vector<Job> GetJobs(const Service& s)
                 }
                 try
                 {
-                    j.url = convert(job["url"].get<std::string>());
+                    j.url = s2t(job["url"].get<std::string>());
                 }
                 catch (const json::exception& e)
                 {
@@ -136,7 +136,7 @@ std::vector<Job> GetJobs(const Service& s)
                     {
                         try
                         {
-                            j.status = convert(get_or(lastbuild["result"], "PROCESS"));
+                            j.status = s2t(get_or(lastbuild["result"], "PROCESS"));
                         }
                         catch (const json::exception& e)
                         {
@@ -188,7 +188,7 @@ std::vector<Job> GetJobs(const Service& s)
                 j.iGroupId = s.iGroupId;
                 try
                 {
-                    j.name = convert(job["ref"].get<std::string>());
+                    j.name = s2t(job["ref"].get<std::string>());
                 }
                 catch (const json::exception& e)
                 {
@@ -196,7 +196,7 @@ std::vector<Job> GetJobs(const Service& s)
                 }
                 try
                 {
-                    j.url = convert(job["web_url"].get<std::string>());
+                    j.url = s2t(job["web_url"].get<std::string>());
                 }
                 catch (const json::exception& e)
                 {
@@ -204,7 +204,7 @@ std::vector<Job> GetJobs(const Service& s)
                 }
                 try
                 {
-                    j.status = convert(job["status"].get<std::string>());
+                    j.status = s2t(job["status"].get<std::string>());
                 }
                 catch (const json::exception& e)
                 {
@@ -254,7 +254,7 @@ std::vector<Job> GetJobs(const Service& s)
                 j.iGroupId = s.iGroupId;
                 try
                 {
-                    j.name = convert(job["name"].get<std::string>());
+                    j.name = s2t(job["name"].get<std::string>());
                 }
                 catch (const json::exception& e)
                 {
@@ -262,8 +262,8 @@ std::vector<Job> GetJobs(const Service& s)
                 }
                 try
                 {
-                    const std::tstring accountName = convert(job["accountName"].get<std::string>());
-                    const std::tstring slug = convert(job["slug"].get<std::string>());
+                    const std::tstring accountName = s2t(job["accountName"].get<std::string>());
+                    const std::tstring slug = s2t(job["slug"].get<std::string>());
                     j.url = TEXT("https://ci.appveyor.com/project/") + accountName + TEXT("/") + slug;
                 }
                 catch (const json::exception& e)
@@ -272,7 +272,7 @@ std::vector<Job> GetJobs(const Service& s)
                 }
                 try
                 {
-                    j.status = convert(job["builds"][0]["status"].get<std::string>());
+                    j.status = s2t(job["builds"][0]["status"].get<std::string>());
                 }
                 catch (const json::exception& e)
                 {

@@ -75,6 +75,9 @@
     <ClInclude Include="src\Rad\AboutDlg.h">
       <Filter>Rad</Filter>
     </ClInclude>
+    <ClInclude Include="src\Rad\Convert.h">
+      <Filter>Rad</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
