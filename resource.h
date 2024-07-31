@@ -6,12 +6,12 @@
 #define IDI_MAIN                        100
 #define IDI_ICON_OK                     102
 #define IDD_ABOUT                       102
-#define IDI_ICON_RUN                    103
+#define IDI_ICON_RUN                    108
 #define IDI_ICON_ERROR                  104
 #define IDI_ICON_INFO                   105
 #define IDR_MENU1                       105
 #define IDR_MENU2                       107
-#define IDI_ICON_PENDING                108
+#define IDI_ICON_PENDING                103
 #define IDC_ABOUT_APPICON               1001
 #define IDC_ABOUT_PRODUCT               1002
 #define IDC_ABOUT_VERSION               1003

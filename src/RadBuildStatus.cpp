@@ -14,6 +14,7 @@
 #include "Rad/WindowsPlus.h"
 #include "Rad/TrayIconHandler.h"
 #include "Rad/AboutDlg.h"
+#include "Rad/Format.h"
 #include "Job.h"
 
 #include "..\resource.h"
@@ -67,6 +68,7 @@ private:
     std::map<DWORD, int> m_IconMap;
     std::vector<Service> m_services;
     TrayIconHandler m_trayIcon = TEXT("Rad Build Status");
+    std::tstring m_trayTitle;
 
     struct JobId
     {
@@ -438,6 +440,7 @@ void RootWindow::Refresh()
 
     // TODO Find and replace instead of clearing
     ListView_DeleteAllItems(m_hWndChild);
+    std::map<std::tstring, int> counts;
 
     DWORD iMaxIcon = IDI_ICON_OK;
 
@@ -472,6 +475,14 @@ void RootWindow::Refresh()
             ListView_SetItemText(m_hWndChild, iItem, 2, bufTimestamp);
         }
 
+        if (!bIgnored)
+        {
+            if (counts.find(j.status) == counts.end())
+                counts[j.status] = 1;
+            else
+                ++counts[j.status];
+        }
+
         // TODO
         // GetDurationFormatEx
 
@@ -480,6 +491,12 @@ void RootWindow::Refresh()
     }
 
     SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(iMaxIcon), ICON_BIG));
+    m_trayTitle = TEXT("Rad Build Status");
+    for (const auto& i : counts)
+    {
+        m_trayTitle += Format(TEXT("\n%s: %d"), i.first.c_str(), i.second);
+    }
+    m_trayIcon.SetTitle(m_trayTitle.c_str());
     m_trayIcon.Update();
 
     SetCursor(hOldCursor);

@@ -10,6 +10,7 @@ public:
     }
 
     void HandleMessage(const HWND hWnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam);
+    void SetTitle(LPCTSTR strTitle) { m_strTitle = strTitle; }
 
     void Update();
 
