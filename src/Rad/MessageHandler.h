@@ -5,6 +5,8 @@
 #define NOMINMAX
 #include <windows.h>
 #include <crtdbg.h>
+// new x; -> new DEBUG_NEW(_NORMAL_BLOCK) x;
+#define DEBUG_NEW(b) (b, __FILE__, __LINE__)
 
 class MessageHandler
 {

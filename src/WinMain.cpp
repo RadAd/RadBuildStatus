@@ -39,6 +39,8 @@ void DisplayError(const std::exception& e, const char* title)
 int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPTSTR lpCmdLine, _In_ int nShowCmd)
 try
 {
+    //_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
+
     int ret = 0;
     g_hInstance = hInstance;
 #ifdef _OBJBASE_H_  // from objbase.h
@@ -56,6 +58,8 @@ try
         CoUninitialize();
 #endif
     }
+    _ASSERTE(_CrtCheckMemory());
+    _ASSERTE(!_CrtDumpMemoryLeaks());
     return ret;
 }
 catch (const std::system_error& e)
