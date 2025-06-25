@@ -165,7 +165,7 @@ std::vector<Job> GetJobs(const Service& s)
                 else if (j.status == TEXT("PROCESS"))
                     j.iIcon = IDI_ICON_RUN;
                 else if (j.status == TEXT("ABORTED"))
-                    j.iIcon = IDI_ICON_ERROR;
+                    j.iIcon = IDI_ICON_CANCELLED;
                 jobs.push_back(j);
             }
             break;
@@ -230,7 +230,7 @@ std::vector<Job> GetJobs(const Service& s)
                 else if (j.status == TEXT("pending"))
                     j.iIcon = IDI_ICON_PENDING;
                 else if (j.status == TEXT("canceled"))
-                    j.iIcon = IDI_ICON_ERROR;
+                    j.iIcon = IDI_ICON_CANCELLED;
                 jobs.push_back(j);
             }
             break;

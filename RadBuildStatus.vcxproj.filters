@@ -111,6 +111,28 @@
     <Image Include="res\StatusPending.ico">
       <Filter>Resources</Filter>
     </Image>
+    <Image Include="res\StatusBlocked_cyan.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\StatusCriticalError_grey.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\StatusOK_grey.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\StatusPause_grey.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\StatusRun_grey.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\StatusStop_grey.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\Time.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\icon1.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RadBuildStatus.rc" />

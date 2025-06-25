@@ -124,12 +124,20 @@
     <ResourceCompile Include="RadBuildStatus.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\icon1.ico" />
     <Image Include="res\RadBuildStatus.ico" />
+    <Image Include="res\StatusBlocked_cyan.ico" />
     <Image Include="res\StatusCriticalError.ico" />
+    <Image Include="res\StatusCriticalError_grey.ico" />
     <Image Include="res\StatusInformation_cyan.ico" />
     <Image Include="res\StatusOK.ico" />
+    <Image Include="res\StatusOK_grey.ico" />
+    <Image Include="res\StatusPause_grey.ico" />
     <Image Include="res\StatusPending.ico" />
     <Image Include="res\StatusRun.ico" />
+    <Image Include="res\StatusRun_grey.ico" />
+    <Image Include="res\StatusStop_grey.ico" />
+    <Image Include="res\Time.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
