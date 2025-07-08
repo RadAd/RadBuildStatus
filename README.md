@@ -14,7 +14,7 @@ Monitor C/I build status
 ![Screenshot](docs/RadBuildStatus.png)
 
 ## Dependencies
-+ [json v3.12.0](https://github.com/nlohmann/json) [![json Release](https://img.shields.io/github/v/release/nlohmann/json)](https://github.com/nlohmann/json/releases) [![commits-since](https://img.shields.io/github/commits-since/nlohmann/json/v3.12.0)](https://github.com/nlohmann/json/commits/master/)
++ [![json v3.12.0](https://img.shields.io/badge/json-v3.12.0-blue)](https://github.com/nlohmann/json) [![json Release](https://img.shields.io/github/v/release/nlohmann/json?label=Latest)](https://github.com/nlohmann/json/releases) [![commits-since](https://img.shields.io/github/commits-since/nlohmann/json/v3.12.0)](https://github.com/nlohmann/json/commits/master/)
 
 ## Supports:
  + Jenkins
