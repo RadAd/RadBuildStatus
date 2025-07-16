@@ -8,7 +8,7 @@
 #include <map>
 #include <set>
 
-#include "Rad/Log.h"
+#include "Rad/WinError.h"
 #include "Rad/ListViewPlus.h"
 #include "Rad/MemoryPlus.h"
 #include "Rad/WindowsPlus.h"
