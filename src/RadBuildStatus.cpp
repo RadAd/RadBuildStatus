@@ -33,19 +33,26 @@ extern HINSTANCE g_hInstance;
 
 class RootWindow : public Window
 {
-    friend WindowManager<RootWindow>;
 public:
-    static ATOM Register() { return WindowManager<RootWindow>::Register(); }
-    static RootWindow* Create() { return WindowManager<RootWindow>::Create(); }
-
-    static void GetWndClass(WNDCLASS& wc)
+    friend WindowManager<RootWindow>;
+    struct Class : public MainClass
     {
-        Window::GetWndClass(wc);
-        wc.hIcon = LoadIcon(wc.hInstance, MAKEINTRESOURCE(IDI_MAIN));
-    }
+        static LPCTSTR ClassName() { return TEXT("RadBuildStatus"); }
+        static void GetWndClass(WNDCLASS& wc)
+        {
+            MainClass::GetWndClass(wc);
+            wc.hIcon = LoadIcon(wc.hInstance, MAKEINTRESOURCE(IDI_MAIN));
+        }
+        static void GetCreateWindow(CREATESTRUCT& cs)
+        {
+            MainClass::GetCreateWindow(cs);
+            cs.dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
+        }
+    };
+public:
+    static RootWindow* Create() { return WindowManager<RootWindow>::Create(NULL, TEXT("Rad Build Status")); }
 
 protected:
-    static void GetCreateWindow(CREATESTRUCT& cs);
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 private:
@@ -61,8 +68,6 @@ private:
     void OnInitMenuPopup(HMENU hMenu, UINT item, BOOL fSystemMenu);
 
     void Refresh();
-
-    static LPCTSTR ClassName() { return TEXT("RadBuildStatus"); }
 
     HWND m_hWndChild = NULL;
     std::map<DWORD, int> m_IconMap;
@@ -121,14 +126,6 @@ private:
             m_ignored.erase(id);
     }
 };
-
-void RootWindow::GetCreateWindow(CREATESTRUCT& cs)
-{
-    Window::GetCreateWindow(cs);
-    cs.lpszName = TEXT("Rad Build Status");
-    cs.style = WS_OVERLAPPEDWINDOW;
-    cs.dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
-}
 
 BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
 {
@@ -506,14 +503,14 @@ void RootWindow::Refresh()
 
 bool Run(_In_ const LPCTSTR lpCmdLine, _In_ const int nShowCmd)
 {
-    RadLogInitWnd(NULL, "Rad Build Status", TEXT("Rad Build Status"));
+    RadLogInitWnd(NULL, "Rad Build Status", L"Rad Build Status");
 
-    CHECK_LE_RET(RootWindow::Register(), false);
+    CHECK_LE_RET(Register< RootWindow::Class>(), false);
 
     RootWindow* prw = RootWindow::Create();
     CHECK_LE_RET(prw != nullptr, false);
 
-    RadLogInitWnd(*prw, "Rad Build Status", TEXT("Rad Build Status"));
+    RadLogInitWnd(*prw, nullptr, nullptr);
     //ShowWindow(*prw, nShowCmd);
     return true;
 }
