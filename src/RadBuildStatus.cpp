@@ -33,7 +33,6 @@ extern HINSTANCE g_hInstance;
 
 class RootWindow : public Window
 {
-public:
     friend WindowManager<RootWindow>;
     struct Class : public MainClass
     {
@@ -50,6 +49,7 @@ public:
         }
     };
 public:
+    static ATOM Register() { return ::Register<Class>(); }
     static RootWindow* Create() { return WindowManager<RootWindow>::Create(NULL, TEXT("Rad Build Status")); }
 
 protected:
@@ -505,7 +505,7 @@ bool Run(_In_ const LPCTSTR lpCmdLine, _In_ const int nShowCmd)
 {
     RadLogInitWnd(NULL, "Rad Build Status", L"Rad Build Status");
 
-    CHECK_LE_RET(Register< RootWindow::Class>(), false);
+    CHECK_LE_RET(RootWindow::Register(), false);
 
     RootWindow* prw = RootWindow::Create();
     CHECK_LE_RET(prw != nullptr, false);
