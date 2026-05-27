@@ -85,6 +85,7 @@ inline void ListView_SetItemParam(HWND hWndListView, int iItem, LPARAM lParam)
 }
 
 BOOL ListView_EnsureSubItemVisible(_In_ HWND hWnd, _In_ int nItem, _In_ int nCol, _In_ BOOL bPartialOK);
+int ListView_GetSortArrow(_In_ HWND hWndListView, _Out_ BOOL* pascending);
 void ListView_SetSortArrow(_In_ HWND hWndListView, _In_ int columnIndex, _In_ BOOL ascending);
 
 LRESULT CALLBACK ListView_EditSubItemProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);

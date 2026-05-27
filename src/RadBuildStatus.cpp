@@ -35,6 +35,7 @@ struct ListViewSort
 {
     HWND hListView;
     int iSortColumn;
+    BOOL ascending;
 };
 
 int CALLBACK ListViewCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM _lPrm)
@@ -47,7 +48,7 @@ int CALLBACK ListViewCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM _lPrm)
     TCHAR name2[200] = TEXT("");
     ListView_GetItemText(lvs->hListView, (int) lParam2, lvs->iSortColumn, name2, ARRAYSIZE(name2));
 
-    return lstrcmp(name1, name2);
+    return lvs->ascending ? lstrcmp(name1, name2) : lstrcmp(name2, name1);
 }
 
 class RootWindow : public Window
@@ -320,9 +321,12 @@ LRESULT RootWindow::OnNotify(const DWORD dwID, const LPNMHDR pNmHdr)
                 case LVN_COLUMNCLICK:
                 {
                     LPNMLISTVIEW pnlv = (LPNMLISTVIEW) pNmHdr;
-                    ListViewSort lvs = { pnlv->hdr.hwndFrom, pnlv->iSubItem };
+                    ListViewSort lvs = { pnlv->hdr.hwndFrom, pnlv->iSubItem, TRUE };
+                    const int currentSort = ListView_GetSortArrow(pnlv->hdr.hwndFrom, &lvs.ascending);
+                    if (currentSort == pnlv->iSubItem)
+                        lvs.ascending = !lvs.ascending;
                     ListView_SortItemsEx(pnlv->hdr.hwndFrom, ListViewCompareFunc, &lvs);
-                    ListView_SetSortArrow(pnlv->hdr.hwndFrom, pnlv->iSubItem, true);
+                    ListView_SetSortArrow(pnlv->hdr.hwndFrom, pnlv->iSubItem, lvs.ascending);
                 }
 
                 case NM_DBLCLK:
@@ -464,6 +468,7 @@ void RootWindow::Refresh()
 
     // TODO Find and replace instead of clearing
     ListView_DeleteAllItems(m_hWndChild);
+    ListView_SetSortArrow(m_hWndChild, -1, TRUE);
     std::map<std::tstring, int> counts;
 
     DWORD iMaxIcon = IDI_ICON_OK;

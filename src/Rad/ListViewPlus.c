@@ -49,6 +49,33 @@ BOOL ListView_EnsureSubItemVisible(_In_ HWND hWnd, _In_ int nItem, _In_ int nCol
         return TRUE;
 }
 
+int ListView_GetSortArrow(_In_ HWND hWndListView, _Out_ BOOL* pascending)
+{
+    const HWND hWndHeader = ListView_GetHeader(hWndListView);
+
+    const int columnCount = Header_GetItemCount(hWndHeader);
+    for (int i = 0; i < columnCount; i++)
+    {
+        HDITEM hdi = { 0 };
+        hdi.mask = HDI_FORMAT;
+        Header_GetItem(hWndHeader, i, &hdi);
+
+        if (hdi.fmt & HDF_SORTUP)
+        {
+            if (pascending)
+                *pascending = TRUE;
+            return i;
+        }
+        else if (hdi.fmt & HDF_SORTDOWN)
+        {
+            if (pascending)
+                *pascending = FALSE;
+            return i;
+        }
+    }
+    return -1;
+}
+
 void ListView_SetSortArrow(_In_ HWND hWndListView, _In_ int columnIndex, _In_ BOOL ascending)
 {
     const HWND hWndHeader = ListView_GetHeader(hWndListView);
@@ -60,10 +87,10 @@ void ListView_SetSortArrow(_In_ HWND hWndListView, _In_ int columnIndex, _In_ BO
         hdi.mask = HDI_FORMAT;
         Header_GetItem(hWndHeader, i, &hdi);
 
+        hdi.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+
         if (i == columnIndex)
             hdi.fmt |= (ascending ? HDF_SORTUP : HDF_SORTDOWN);
-        else
-            hdi.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
 
         Header_SetItem(hWndHeader, i, &hdi);
     }
