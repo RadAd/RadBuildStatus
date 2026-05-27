@@ -290,7 +290,7 @@ std::vector<Job> GetJobs(const Service& s)
                 j.iIcon = IDI_ICON_INFO;
                 if (j.status == TEXT("success"))
                     j.iIcon = IDI_ICON_OK;
-                else if (j.status == TEXT("failure"))
+                else if (j.status == TEXT("failure") || j.status == TEXT("failed"))
                     j.iIcon = IDI_ICON_ERROR;
                 else if (j.status == TEXT("starting"))
                     j.iIcon = IDI_ICON_RUN;
