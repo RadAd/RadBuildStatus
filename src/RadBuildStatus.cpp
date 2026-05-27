@@ -31,6 +31,25 @@ extern HINSTANCE g_hInstance;
 
 #define ID_LIST (101)
 
+struct ListViewSort
+{
+    HWND hListView;
+    int iSortColumn;
+};
+
+int CALLBACK ListViewCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM _lPrm)
+{
+    const ListViewSort* lvs = (ListViewSort*) _lPrm;
+
+    TCHAR name1[200] = TEXT("");
+    ListView_GetItemText(lvs->hListView, (int) lParam1, lvs->iSortColumn, name1, ARRAYSIZE(name1));
+
+    TCHAR name2[200] = TEXT("");
+    ListView_GetItemText(lvs->hListView, (int) lParam2, lvs->iSortColumn, name2, ARRAYSIZE(name2));
+
+    return lstrcmp(name1, name2);
+}
+
 class RootWindow : public Window
 {
     friend WindowManager<RootWindow>;
@@ -191,7 +210,7 @@ BOOL RootWindow::OnCreate(const LPCREATESTRUCT lpCreateStruct)
         ImageList_AddIcon(hImageList, hIcon);
     _ASSERT(ImageList_GetImageCount(hImageList) == hIcons.size());
 
-    m_hWndChild = ListView_Create(*this, RECT(), WS_CHILD | WS_VISIBLE | LVS_ALIGNTOP | LVS_REPORT, LVS_EX_FLATSB | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_COLUMNOVERFLOW | LVS_EX_LABELTIP, 101);
+    m_hWndChild = ListView_Create(*this, RECT(), WS_CHILD | WS_VISIBLE | LVS_ALIGNTOP | LVS_REPORT, LVS_EX_FLATSB | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_COLUMNOVERFLOW | LVS_EX_LABELTIP, ID_LIST);
     _ASSERT(m_hWndChild);
     ListView_EnableGroupView(m_hWndChild, TRUE);
     //ListView_SetImageList(m_hWndChild, hImageList, LVSIL_NORMAL);
@@ -296,6 +315,14 @@ LRESULT RootWindow::OnNotify(const DWORD dwID, const LPNMHDR pNmHdr)
                     LPNMLISTVIEW pnlv = (LPNMLISTVIEW) pNmHdr;
                     free((LPTSTR) pnlv->lParam);
                     break;
+                }
+
+                case LVN_COLUMNCLICK:
+                {
+                    LPNMLISTVIEW pnlv = (LPNMLISTVIEW) pNmHdr;
+                    ListViewSort lvs = { pnlv->hdr.hwndFrom, pnlv->iSubItem };
+                    ListView_SortItemsEx(pnlv->hdr.hwndFrom, ListViewCompareFunc, &lvs);
+                    ListView_SetSortArrow(pnlv->hdr.hwndFrom, pnlv->iSubItem, true);
                 }
 
                 case NM_DBLCLK:

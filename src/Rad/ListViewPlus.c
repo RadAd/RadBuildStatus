@@ -29,7 +29,7 @@ static LRESULT CALLBACK Edit_InPlaceProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
     }
 }
 
-BOOL ListView_EnsureSubItemVisible(HWND hWnd, _In_ int nItem, _In_ int nCol, _In_ BOOL bPartialOK)
+BOOL ListView_EnsureSubItemVisible(_In_ HWND hWnd, _In_ int nItem, _In_ int nCol, _In_ BOOL bPartialOK)
 {
     if (!ListView_EnsureVisible(hWnd, nItem, bPartialOK))
         return FALSE;
@@ -47,6 +47,26 @@ BOOL ListView_EnsureSubItemVisible(HWND hWnd, _In_ int nItem, _In_ int nCol, _In
         return ListView_Scroll(hWnd, rect.right - rcClient.right, 0);
     else
         return TRUE;
+}
+
+void ListView_SetSortArrow(_In_ HWND hWndListView, _In_ int columnIndex, _In_ BOOL ascending)
+{
+    const HWND hWndHeader = ListView_GetHeader(hWndListView);
+
+    const int columnCount = Header_GetItemCount(hWndHeader);
+    for (int i = 0; i < columnCount; i++)
+    {
+        HDITEM hdi = { 0 };
+        hdi.mask = HDI_FORMAT;
+        Header_GetItem(hWndHeader, i, &hdi);
+
+        if (i == columnIndex)
+            hdi.fmt |= (ascending ? HDF_SORTUP : HDF_SORTDOWN);
+        else
+            hdi.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+
+        Header_SetItem(hWndHeader, i, &hdi);
+    }
 }
 
 LRESULT CALLBACK ListView_EditSubItemProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
