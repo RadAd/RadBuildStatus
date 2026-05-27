@@ -468,7 +468,8 @@ void RootWindow::Refresh()
 
     // TODO Find and replace instead of clearing
     ListView_DeleteAllItems(m_hWndChild);
-    ListView_SetSortArrow(m_hWndChild, -1, TRUE);
+    ListViewSort lvs = { m_hWndChild, -1, TRUE };
+    lvs.iSortColumn = ListView_GetSortArrow(m_hWndChild, &lvs.ascending);
     std::map<std::tstring, int> counts;
 
     DWORD iMaxIcon = IDI_ICON_OK;
@@ -518,6 +519,8 @@ void RootWindow::Refresh()
         if (!bIgnored && j.iIcon > iMaxIcon)
             iMaxIcon = j.iIcon;
     }
+    if (lvs.iSortColumn >= 0)
+        ListView_SortItemsEx(m_hWndChild, ListViewCompareFunc, &lvs);
 
     SendMessage(*this, WM_SETICON, ICON_BIG, (LPARAM) LoadIconImage(g_hInstance, MAKEINTRESOURCE(iMaxIcon), ICON_BIG));
     m_trayTitle = TEXT("Rad Build Status");
